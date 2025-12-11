@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Fletcher Eats — Offline Pro</title>
+<meta name="theme-color" content="#06C167" />
+<style>
+:root{
+  --brand:#06C167;
+  --bg:#f7f8f9;
+  --card:#fff;
+  --text:#0b2a25;
+  --muted:#6b7976;
+  --radius:12px;
+  --maxw:980px;
+  --shadow:0 8px 24px rgba(12,18,14,0.06);
+  --nav-height:56px;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;font-family:Inter,system-ui,Roboto,Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;text-align:center}
+.app{max-width:var(--maxw);margin:0 auto;padding:12px;padding-bottom:140px}
+.header{display:flex;align-items:center;gap:12px;padding:12px;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,0.04);position:sticky;top:0;z-index:90;border-radius:8px}
+.logo{display:flex;gap:12px;align-items:center;cursor:pointer}
+.logo-box{width:85px;height:85px;border-radius:14px;background:var(--brand);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800}
+.brand-title{font-weight:800;font-size:20px}
+.brand-sub{font-size:13px;color:var(--muted)}
+.container{padding:8px}
+.card{background:var(--card);border-radius:var(--radius);padding:14px;margin:12px auto;box-shadow:var(--shadow);border:1px solid rgba(0,0,0,0.03);max-width:720px;text-align:left}
+.card.center{text-align:center}
+.h1{font-size:18px;margin:6px 0}
+.small{font-size:13px;color:var(--muted)}
+.input,textarea,select{width:100%;padding:10px;border-radius:10px;border:1px solid #e6eaea;background:#fff;color:var(--text);outline:none;margin-top:8px}
+.btn{padding:10px 12px;border-radius:10px;border:none;cursor:pointer;font-weight:700}
+.btn-primary{background:var(--brand);color:#fff}
+.btn-ghost{background:transparent;color:var(--brand);border:1px solid rgba(6,193,103,0.12)}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+/* top nav - moved under header */
+.topnav-wrap{max-width:720px;margin:12px auto;display:flex;justify-content:center}
+.navbar{background:var(--card);border-radius:12px;display:flex;justify-content:space-around;padding:8px 6px;box-shadow:0 6px 20px rgba(10,16,12,0.04);align-items:center;gap:6px;width:100%}
+.navbar button{background:transparent;border:none;color:var(--muted);font-weight:700;display:flex;gap:8px;align-items:center;padding:8px 12px;border-radius:8px}
+.navbar button.active{color:var(--brand);background:linear-gradient(#f8fff9,#fff)} 
+.navbar svg{width:18px;height:18px;opacity:0.9}
+.toast-wrap{position:fixed;right:16px;bottom:96px;display:flex;flex-direction:column;gap:8px;z-index:9999}
+.toast{min-width:220px;background:#fff;border-radius:10px;padding:12px 14px;border-left:4px solid var(--brand);box-shadow:0 8px 30px rgba(10,16,12,0.06);display:flex;justify-content:space-between;align-items:center}
+.hidden{display:none}
+.file-preview{max-width:120px;border-radius:8px;margin-top:8px;margin-right:8px}
+.map-frame{width:100%;height:220px;border-radius:10px;background:#f0f0f0;border:1px solid #e2e2e2;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.map-canvas{width:100%;height:100%;background:linear-gradient(180deg,#e9f3f0,#f7fbfa);position:relative}
+.map-marker{position:absolute;width:18px;height:18px;border-radius:50%;background:var(--brand);border:3px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,0.2);transform:translate(-50%,-50%)}
+.map-grid{position:absolute;inset:0;opacity:0.08;background-image:linear-gradient(transparent 95%, #cfe6df 95%), linear-gradient(90deg, transparent 95%, #cfe6df 95%);background-size:40px 40%}
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.csv-btn{background:#eee;padding:8px;border-radius:8px;border:1px solid #ddd;cursor:pointer}
+.label{font-size:13px;color:#334}
+/* modal */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;z-index:1200}
+.modal{background:#fff;max-width:420px;width:92%;border-radius:12px;padding:18px;box-shadow:0 20px 40px rgba(0,0,0,0.2);text-align:center}
+.modal h3{margin:0 0 8px 0}
+.modal .row{justify-content:center;margin-top:12px}
+.modal button{min-width:140px}
+/* responsive tweaks */
+@media (max-width:640px){
+  .card{margin:12px 8px;padding:12px}
+  .logo-box{width:64px;height:64px}
+  .brand-title{font-size:18px}
+  .navbar{gap:4px;padding:6px}
+  .navbar button{padding:8px}
+}
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="app-splash" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;background:#c7e7ff;z-index:99999;opacity:1;">
+  <div style="width:320px;">
+    <svg viewBox="0 0 300 180" xmlns="http://www.w3.org/2000/svg">
+      <rect x="40" y="70" width="160" height="55" rx="12" fill="#1E4DD8"/>
+      <rect x="70" y="45" width="90" height="40" rx="10" fill="#dfeaff"/>
+      <polygon points="200,125 250,125 225,90" fill="#1E4DD8"/>
+      <circle cx="95" cy="145" r="15" fill="#ffffff"/>
+      <circle cx="170" cy="145" r="15" fill="#ffffff"/>
+    </svg>
+  </div>
+  <div style="margin-top:14px;color:#1E4DD8;font-weight:800;font-size:28px;">Fletcher Eats</div>
+  <div style="margin-top:8px;color:#0b2a25;font-size:14px;">Preparing app…</div>
+</div>
+<script>
+window.addEventListener('load',()=>{ setTimeout(()=>{document.getElementById('app-splash').style.display='none';},900); });
+</script>
+
+<div class="app" id="app">
+  <header class="header" style="border-radius:8px">
+    <div id="logoTap" class="logo" title="Tap 5× to open admin" style="align-items:center">
+      <div class="logo-box" style="display:flex;align-items:center;justify-content:center;">
+        <svg viewBox="0 0 300 180" xmlns="http://www.w3.org/2000/svg" fill="#ffffff" width="78" height="78">
+          <rect x="40" y="70" width="160" height="55" rx="12"/>
+          <polygon points="200,125 250,125 225,90"/>
+          <circle cx="95" cy="145" r="15"/>
+          <circle cx="170" cy="145" r="15"/>
+        </svg>
+      </div>
+      <div style="margin-left:12px;text-align:left">
+        <div class="brand-title">Fletcher Eats</div>
+        <div class="brand-sub">Buy • Collect • Deliver — Mount Fletcher</div>
+      </div>
+      <div style="margin-left:auto" class="small" id="hours-note">From R50 • 07:00–20:00</div>
+    </div>
+  </header>
+
+  <!-- TOP NAV -->
+  <div class="topnav-wrap">
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+      <button id="nav-home" class="active" onclick="showPage('home')">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 11.5 12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-8.5z" fill="currentColor"/></svg> Home
+      </button>
+      <button id="nav-order" onclick="showPage('order')">
+        <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM7.16 4.26l1.24 6.03h8.82l1.24-6.03H7.16z" fill="currentColor"/></svg> Order
+      </button>
+      <button id="nav-drivers" onclick="showPage('drivers')">
+        <svg viewBox="0 0 24 24"><path d="M20 8h-3V6a3 3 0 0 0-3-3H10a3 3 0 0 0-3 3v2H4v11h16V8z" fill="currentColor"/></svg> Drivers
+      </button>
+      <button id="nav-morebtn" onclick="showPage('more')">
+        <svg viewBox="0 0 24 24"><path d="M12 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm0 9a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm0 9a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" fill="currentColor"/></svg> More
+      </button>
+    </nav>
+  </div>
+
+  <main class="container">
+
+    <!-- HOME -->
+    <section id="page-home" class="card page center">
+      <div style="text-align:center;">
+        <h1 style="font-size:26px;margin:0 0 8px 0">Welcome to Fletcher Eats</h1>
+        <div class="small" style="margin-bottom:14px">Your trusted local delivery service</div>
+        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="showPage('signup')">Create Account</button>
+          <button class="btn btn-ghost" onclick="showPage('login')">Login</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SIGNUP -->
+    <section id="page-signup" class="card page hidden">
+      <div class="h1">Create Account</div>
+      <div class="small">Phone number is your username — required</div>
+      <input id="su_name" class="input" placeholder="Full name">
+      <input id="su_phone" class="input" placeholder="Phone number (required)">
+      <input id="su_email" class="input" placeholder="Email (optional)">
+      <input id="su_pass" class="input" type="password" placeholder="Password (min 4 chars)">
+      <div class="row" style="margin-top:10px;justify-content:center">
+        <button class="btn btn-primary" onclick="signup()">Sign up</button>
+        <button class="btn btn-ghost" onclick="showPage('login')">Have account?</button>
+      </div>
+    </section>
+
+    <!-- LOGIN -->
+    <section id="page-login" class="card page hidden">
+      <div class="h1">Login</div>
+      <input id="li_phone" class="input" placeholder="Phone number">
+      <input id="li_pass" class="input" type="password" placeholder="Password">
+      <div class="row" style="margin-top:10px;justify-content:center">
+        <button class="btn btn-primary" onclick="loginUser()">Login</button>
+        <button class="btn" onclick="showPage('signup')">Sign up</button>
+        <button class="btn btn-ghost" onclick="showPage('reset')">Forgot password?</button>
+      </div>
+    </section>
+
+    <!-- RESET -->
+    <section id="page-reset" class="card page hidden">
+      <div class="h1">Reset Password (local)</div>
+      <div class="small">Enter your phone and new password (stored locally).</div>
+      <input id="rs_phone" class="input" placeholder="Phone number">
+      <input id="rs_new" class="input" type="password" placeholder="New password">
+      <div class="row" style="margin-top:10px;justify-content:center"><button class="btn btn-primary" onclick="resetPassword()">Reset</button> <button class="btn" onclick="showPage('login')">Cancel</button></div>
+    </section>
+
+    <!-- PROFILE -->
+    <section id="page-profile" class="card page hidden">
+      <div class="h1">My Profile</div>
+      <input id="pf_name" class="input" placeholder="Full name">
+      <input id="pf_phone" class="input" placeholder="Phone number">
+      <input id="pf_email" class="input" placeholder="Email (optional)">
+      <input id="pf_pass" class="input" type="password" placeholder="New password (leave blank to keep)">
+      <div class="row" style="justify-content:center">
+        <button class="btn btn-primary" onclick="saveProfile()">Save</button>
+        <button class="btn" onclick="logout()">Logout</button>
+      </div>
+    </section>
+
+    <!-- ORDER -->
+    <section id="page-order" class="card page hidden">
+      <div class="h1">Place Order</div>
+      <div class="note-small">Choose Buy or Collect, upload files, then share a location snapshot.</div>
+
+      <div style="margin-top:8px" class="row" aria-hidden>
+        <label><input type="radio" name="otype" value="buy" checked> <span style="font-weight:700">Buy</span></label>
+        <label style="margin-left:12px"><input type="radio" name="otype" value="collect"> <span style="font-weight:700">Collect</span></label>
+      </div>
+
+      <input id="o_store" class="input" placeholder="Store / pickup">
+      <textarea id="o_items" class="input" rows="3" placeholder="Items / notes"></textarea>
+
+      <div id="buyUploads" class="hidden">
+        <div class="small">Upload grocery list (optional)</div>
+        <input id="o_grocery_files" type="file" accept="image/*,application/pdf" multiple class="input">
+        <div id="o_grocery_previews" style="display:flex;flex-wrap:wrap"></div>
+      </div>
+
+      <div id="collectUploads" class="hidden">
+        <div class="small">Upload slip/proof (optional)</div>
+        <input id="o_slip_files" type="file" accept="image/*,application/pdf" multiple class="input">
+        <div id="o_slip_previews" style="display:flex;flex-wrap:wrap"></div>
+      </div>
+
+      <input id="o_location" class="input" placeholder="Delivery location (village / landmark)">
+      <div class="row" style="justify-content:center">
+        <button id="placeOrderBtn" class="btn btn-primary" onclick="placeOrder()">Place order</button>
+        <button class="btn btn-ghost" onclick="showPage('customer-orders')">My orders</button>
+      </div>
+
+      <div style="margin-top:12px" class="label">After placing an order you'll be offered to:</div>
+      <ul>
+        <li>Share via WhatsApp (requires internet)</li>
+        <li>Share to admin (in-app) — offline snapshot saved</li>
+      </ul>
+    </section>
+
+    <!-- ORDERS -->
+    <section id="page-customer-orders" class="card page hidden">
+      <div class="h1">My Orders</div>
+      <div id="custOrdersHolder" class="small"></div>
+    </section>
+
+    <!-- DRIVERS -->
+    <section id="page-drivers" class="card page hidden">
+      <div class="h1">Drivers</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <div style="flex:1;min-width:240px">
+          <div class="small">Driver register</div>
+          <input id="drv_name" class="input" placeholder="Full name">
+          <input id="drv_phone" class="input" placeholder="Phone (required)">
+          <input id="drv_pass" class="input" type="password" placeholder="Password">
+          <input id="drv_vehicle" class="input" placeholder="Vehicle">
+          <div class="row" style="justify-content:flex-start"><button class="btn btn-primary" onclick="driverRegister()">Register</button></div>
+        </div>
+        <div style="flex:1;min-width:240px">
+          <div class="small">Driver login</div>
+          <input id="drv_l_phone" class="input" placeholder="Phone">
+          <input id="drv_l_pass" class="input" type="password" placeholder="Password">
+          <div class="row" style="justify-content:flex-start"><button class="btn btn-primary" onclick="driverLogin()">Login</button></div>
+          <div id="driverDashboard" class="hidden" style="margin-top:12px">
+            <div class="small">Assigned orders</div>
+            <div id="driverAssigned"></div>
+            <div style="margin-top:8px" class="row"><button class="btn" onclick="driverLogout()">Logout</button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MORE -->
+    <section id="page-more" class="card page hidden">
+      <div class="h1">More</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button class="btn btn-ghost" onclick="showPage('about')">About</button>
+        <button class="btn btn-ghost" onclick="showPage('contact')">Contact</button>
+        <button class="btn btn-ghost" onclick="showPage('faq')">FAQ</button>
+        <button class="btn btn-ghost" onclick="showPage('terms')">Terms & Privacy</button>
+        <button class="btn btn-ghost" onclick="showPage('services')">Services</button>
+        <button class="btn btn-ghost" onclick="showPage('support')">Support</button>
+      </div>
+    </section>
+
+    <!-- INFO PAGES -->
+    <section id="page-about" class="card page hidden"><div class="h1">About</div><div class="small">Fletcher Eats — local pick & deliver.</div></section>
+    <section id="page-contact" class="card page hidden">
+      <div class="h1">Contact</div>
+      <input id="ct_name" class="input" placeholder="Your name">
+      <input id="ct_phone" class="input" placeholder="Phone">
+      <textarea id="ct_msg" class="input" rows="4" placeholder="Message"></textarea>
+      <div class="row" style="justify-content:center"><button class="btn btn-primary" onclick="saveContact()">Send</button></div>
+    </section>
+    <section id="page-faq" class="card page hidden"><div class="h1">FAQ</div><div class="small">How to order, drivers, hours.</div></section>
+    <section id="page-terms" class="card page hidden"><div class="h1">Terms</div><div class="small">We store data locally for login and order history.</div></section>
+    <section id="page-services" class="card page hidden"><div class="h1">Services</div><div class="small">Buy, Collect, Deliver.</div></section>
+    <section id="page-support" class="card page hidden"><div class="h1">Support</div><div class="small">Call support: 065 690 9476</div></section>
+
+    <!-- ADMIN LOGIN -->
+    <section id="page-admin-login" class="card page hidden">
+      <div class="h1">Admin Login</div>
+      <input id="admin_email" class="input" placeholder="Admin email">
+      <input id="admin_pass" class="input" type="password" placeholder="Admin password">
+      <div class="row" style="justify-content:center"><button class="btn btn-primary" onclick="adminLogin()">Login</button></div>
+    </section>
+
+    <!-- ADMIN DASHBOARD -->
+    <section id="page-admin" class="card page hidden">
+      <div class="h1">Admin Dashboard</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <div style="flex:1;min-width:300px">
+          <div class="small">Pending Drivers</div>
+          <div id="pendingDrivers"></div>
+          <div style="margin-top:12px" class="small">Messages</div>
+          <div id="adminMessages"></div>
+          <div style="margin-top:12px">
+            <button class="csv-btn" onclick="exportCSV('orders')">Export Orders CSV</button>
+            <button class="csv-btn" onclick="exportCSV('drivers')">Export Drivers CSV</button>
+            <button class="csv-btn" onclick="exportCSV('messages')">Export Messages CSV</button>
+          </div>
+        </div>
+        <div style="flex:1;min-width:300px">
+          <div class="small">Shared Locations (snapshots)</div>
+          <div id="adminLocations" style="margin-top:8px"></div>
+          <div style="margin-top:10px" class="map-frame">
+            <div class="map-canvas" id="adminMap">
+              <div class="map-grid"></div>
+            </div>
+          </div>
+          <div class="note-small">Offline map is a simple schematic showing relative position within the area.</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer" style="text-align:center">Fletcher Eats • © <span id="yr"></span></div>
+  </main>
+
+  <div id="toastWrap" class="toast-wrap" aria-live="polite"></div>
+</div>
+
+<!-- SHARE OPTIONS MODAL (replaces confirm()) -->
+<div id="shareModal" class="hidden" role="dialog" aria-modal="true" aria-labelledby="shareTitle">
+  <div class="modal-backdrop" style="display:flex;">
+    <div class="modal" role="document">
+      <h3 id="shareTitle">Share location</h3>
+      <p>Select how you want to share your location for the order.</p>
+      <div class="row">
+        <button class="btn btn-primary" onclick="shareViaWhatsAppFromModal()">WhatsApp</button>
+        <button class="btn btn-ghost" onclick="shareToAdminFromModal()">Share in app</button>
+      </div>
+      <div style="margin-top:10px"><button class="btn" onclick="closeShareModal()">Cancel</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* Offline Pro App JS (full system + improved UX) */
+/* Config */
+const ADMIN_EMAIL = 'Administrator@gmail.com';
+const ADMIN_PASS = '@Admin2010';
+const K_CUSTOMERS = 'fe_offline_customers';
+const K_DRIVERS = 'fe_offline_drivers';
+const K_ORDERS = 'fe_offline_orders';
+const K_CONTACTS = 'fe_offline_contacts';
+const K_LOCATIONS = 'fe_offline_locations';
+const K_SESSION = 'fe_offline_session';
+
+/* Helpers */
+function save(k,v){ localStorage.setItem(k, JSON.stringify(v)); }
+function load(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } }
+function uid(p='ID'){ return p + '-' + Date.now(); }
+function el(id){ return document.getElementById(id); }
+function showToast(title, text='', t=3000){ try{ const wrap=el('toastWrap'); const d=document.createElement('div'); d.className='toast'; d.innerHTML = `<div><strong>${escapeHtml(title)}</strong><div style="margin-top:6px">${escapeHtml(text)}</div></div><div><button style="border:none;background:transparent;cursor:pointer" onclick="this.closest('.toast').remove()">✕</button></div>`; wrap.prepend(d); setTimeout(()=>{ try{ d.remove(); }catch{} }, t); }catch(e){} }
+function escapeHtml(s){ if(!s && s!==0) return ''; return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+/* Navigation */
+function hideAllPages(){ document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden')); }
+function showPage(id){ hideAllPages(); const node = document.getElementById('page-'+id) || document.getElementById(id); if(node) node.classList.remove('hidden'); updateNavActive(id); checkOrderPermission(); window.scrollTo({top:0,behavior:'smooth'}); }
+function updateNavActive(page){ document.querySelectorAll('.navbar button').forEach(b=>b.classList.remove('active')); const navId = 'nav-'+(page.replace('page-','').replace('page-','')); if(document.getElementById(navId)) document.getElementById(navId).classList.add('active'); }
+
+/* Init */
+document.addEventListener('DOMContentLoaded', ()=>{
+  el('yr').textContent = new Date().getFullYear();
+  hideAllPages(); el('page-home').classList.remove('hidden');
+  updateOrderTypeUI();
+  if(window.Notification && Notification.permission==='default') setTimeout(()=>Notification.requestPermission().catch(()=>{}),1200);
+  renderInitial();
+});
+
+/* AUTH */
+function getCustomers(){ return load(K_CUSTOMERS) || []; }
+function saveCustomers(v){ save(K_CUSTOMERS, v); }
+function getDrivers(){ return load(K_DRIVERS) || []; }
+function saveDrivers(v){ save(K_DRIVERS, v); }
+function getOrders(){ return load(K_ORDERS) || []; }
+function saveOrders(v){ save(K_ORDERS, v); }
+function getContacts(){ return load(K_CONTACTS) || []; }
+function saveContacts(v){ save(K_CONTACTS, v); }
+function getLocations(){ return load(K_LOCATIONS) || []; }
+function saveLocations(v){ save(K_LOCATIONS, v); }
+function getSession(){ return load(K_SESSION); }
+function setSession(o){ save(K_SESSION, o); }
+function clearSession(){ localStorage.removeItem(K_SESSION); }
+
+/* Sign up / login */
+function signup(){
+  const name = el('su_name').value.trim();
+  const phone = el('su_phone').value.trim();
+  const email = el('su_email').value.trim();
+  const pass = el('su_pass').value;
+  if(!name || !phone || !pass){ alert('Name, phone and password required'); return; }
+  const users = getCustomers();
+  if(users.find(u=>u.phone===phone)){ alert('Phone already registered'); return; }
+  const id = uid('CUST');
+  users.push({id,name,phone,email,pass});
+  saveCustomers(users);
+  setSession({type:'customer',id});
+  showToast('Account created','Welcome '+name);
+  el('su_name').value=''; el('su_phone').value=''; el('su_email').value=''; el('su_pass').value='';
+  showPage('order');
+}
+function loginUser(){
+  const phone = el('li_phone').value.trim();
+  const pass = el('li_pass').value;
+  const users = getCustomers();
+  const u = users.find(x=>x.phone===phone && x.pass===pass);
+  if(!u){ alert('Incorrect phone or password'); return; }
+  setSession({type:'customer',id:u.id});
+  showToast('Logged in','Welcome back '+u.name);
+  el('li_phone').value=''; el('li_pass').value='';
+  showPage('order');
+}
+function resetPassword(){
+  const phone = el('rs_phone').value.trim();
+  const np = el('rs_new').value;
+  const users = getCustomers();
+  const i = users.findIndex(u=>u.phone===phone);
+  if(i===-1){ alert('Phone not found'); return; }
+  if(!np || np.length<4){ alert('Password too short'); return; }
+  users[i].pass = np; saveCustomers(users);
+  showToast('Password reset','You can login with new password');
+  showPage('login');
+}
+function saveProfile(){
+  const sess = getSession(); if(!sess || sess.type!=='customer'){ alert('Not logged in'); return; }
+  const users = getCustomers(); const i = users.findIndex(u=>u.id===sess.id); if(i===-1) return;
+  const name = el('pf_name').value.trim(), phone = el('pf_phone').value.trim(), email = el('pf_email').value.trim(), np = el('pf_pass').value;
+  if(!name||!phone){ alert('Name and phone required'); return; }
+  users[i].name = name; users[i].phone = phone; users[i].email = email; if(np && np.length>=4) users[i].pass = np;
+  saveCustomers(users); showToast('Profile saved','');
+}
+
+/* Driver flows */
+function driverRegister(){
+  const name = el('drv_name').value.trim();
+  const phone = el('drv_phone').value.trim();
+  const pass = el('drv_pass').value;
+  const vehicle = el('drv_vehicle').value.trim();
+  if(!name||!phone||!pass||!vehicle){ alert('Fill all fields'); return; }
+  const arr = getDrivers();
+  if(arr.find(x=>x.phone===phone)){ alert('Phone used'); return; }
+  arr.push({id:uid('DRV'),name,phone,pass,vehicle,status:'pending'});
+  saveDrivers(arr);
+  el('drv_name').value=''; el('drv_phone').value=''; el('drv_pass').value=''; el('drv_vehicle').value='';
+  showToast('Driver registered','Await admin approval');
+  renderPendingDrivers();
+}
+function driverLogin(){
+  const phone = el('drv_l_phone').value.trim(); const pass = el('drv_l_pass').value;
+  const arr = getDrivers(); const d = arr.find(x=>x.phone===phone && x.pass===pass);
+  if(!d){ alert('Invalid'); return; } if(d.status!=='approved'){ alert('Not approved'); return; }
+  setSession({type:'driver',id:d.id}); showToast('Driver logged in','Welcome '+d.name); el('driverDashboard').classList.remove('hidden'); renderDriverAssigned();
+}
+function driverLogout(){ clearSession(); el('driverDashboard').classList.add('hidden'); showToast('Driver logged out',''); }
+
+/* Orders */
+function updateOrderTypeUI(){ const val = document.querySelector('input[name=\"otype\"]:checked')?.value || 'buy'; if(val==='buy'){ el('buyUploads').classList.remove('hidden'); el('collectUploads').classList.add('hidden'); } else { el('buyUploads').classList.add('hidden'); el('collectUploads').classList.remove('hidden'); } }
+document.addEventListener('change', (e)=>{ if(e.target && e.target.name==='otype') updateOrderTypeUI(); });
+
+function previewFiles(inputId, holderId){ const input=el(inputId); const holder=el(holderId); holder.innerHTML=''; const files=Array.from(input.files||[]); files.forEach(f=>{ if(f.type.startsWith('image/')){ const fr=new FileReader(); fr.onload=(ev)=>{ const img=document.createElement('img'); img.src=ev.target.result; img.className='file-preview'; holder.appendChild(img); }; fr.readAsDataURL(f); } else { const p=document.createElement('div'); p.className='small'; p.textContent=f.name; holder.appendChild(p); } }); }
+el('o_grocery_files')?.addEventListener('change', ()=>previewFiles('o_grocery_files','o_grocery_previews'));
+el('o_slip_files')?.addEventListener('change', ()=>previewFiles('o_slip_files','o_slip_previews'));
+
+function placeOrder(){
+  const sess = getSession(); if(!sess || sess.type!=='customer'){ alert('Login required'); showPage('login'); return; }
+  const store = el('o_store').value.trim(); const items = el('o_items').value.trim(); const location = el('o_location').value.trim();
+  if(!store||!items||!location){ alert('Fill all fields'); return; }
+  const type = document.querySelector('input[name=\"otype\"]:checked')?.value || 'buy';
+  const orders = getOrders();
+  const users = getCustomers(); const user = users.find(u=>u.id===sess.id);
+  const id = uid('ORD');
+  const groceryFiles = Array.from(el('o_grocery_files').files || []).map(f=>f.name);
+  const slipFiles = Array.from(el('o_slip_files').files || []).map(f=>f.name);
+  orders.push({id,customerId:user.id,customerName:user.name,store,items,location,type,files: (type==='buy'?groceryFiles:slipFiles),status:'pending',time:Date.now(),driverId:null});
+  saveOrders(orders);
+  el('o_store').value=''; el('o_items').value=''; el('o_location').value=''; el('o_grocery_previews').innerHTML=''; el('o_slip_previews').innerHTML='';
+  showToast('Order placed','Choose how to share location');
+  // open modal instead of confirm()
+  openShareModal();
+  renderCustomerOrders(); renderAdminOrders();
+}
+
+/* Share modal controls */
+function openShareModal(){ el('shareModal').classList.remove('hidden'); el('shareModal').querySelector('.modal-backdrop').style.display='flex'; }
+function closeShareModal(){ el('shareModal').classList.add('hidden'); el('shareModal').querySelector('.modal-backdrop').style.display='none'; }
+
+function shareViaWhatsAppFromModal(){
+  closeShareModal();
+  shareViaWhatsAppLastOrder();
+}
+function shareToAdminFromModal(){
+  closeShareModal();
+  shareToAdminLastOrder();
+}
+
+/* Share via WhatsApp: unchanged */
+function shareViaWhatsAppLastOrder(){
+  const orders = getOrders(); const order = orders[orders.length-1];
+  if(!order){ alert('No recent order'); return; }
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition((pos)=>{
+      const lat = pos.coords.latitude.toFixed(6); const lon = pos.coords.longitude.toFixed(6);
+      const maps = `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
+      const phone = '0656909476'; const msg = encodeURIComponent(`Hi Fletcher Eats, I placed order ${order.id}. My location: ${maps}`);
+      window.open('https://wa.me/27' + phone.substring(1) + '?text=' + msg, '_blank');
+      showToast('WhatsApp opened','Attach live location inside WhatsApp');
+    }, (err)=>{ const phone='0656909476'; const msg = encodeURIComponent(`Hi Fletcher Eats, I placed order ${order.id}. Please ask for my location.`); window.open('https://wa.me/27' + phone.substring(1) + '?text=' + msg, '_blank'); }, {timeout:10000});
+  } else {
+    const phone='0656909476'; const msg = encodeURIComponent(`Hi Fletcher Eats, I placed order ${order.id}. Please ask for my location.`); window.open('https://wa.me/27' + phone.substring(1) + '?text=' + msg, '_blank');
+  }
+}
+
+/* Share to admin (same as before) */
+function shareToAdminLastOrder(){
+  const sess = getSession(); if(!sess || sess.type!=='customer'){ alert('Login first'); return; }
+  if(!navigator.geolocation){ alert('Geolocation not supported'); return; }
+  showToast('Requesting location — allow permission');
+  navigator.geolocation.getCurrentPosition((pos)=>{
+    const lat = pos.coords.latitude; const lon = pos.coords.longitude;
+    const locs = getLocations(); const orders = getOrders(); const order = orders[orders.length-1];
+    const entry = { id: uid('LOC'), orderId: order ? order.id : null, customerId: sess.id, customerName: sess.name, phone: sess.phone || '', lat, lon, time: Date.now() };
+    locs.push(entry); saveLocations(locs);
+    showToast('Location shared to admin');
+    renderAdminLocations();
+  }, (err)=>{ alert('Unable to get location: ' + (err.message || 'permission denied')); }, {enableHighAccuracy:true, timeout:15000});
+}
+
+/* RENDER functions */
+function renderCustomerOrders(){
+  const sess = getSession(); const holder = el('custOrdersHolder'); holder.innerHTML=''; if(!sess || sess.type!=='customer'){ holder.innerHTML='<div class=\"small\">No orders (login required)</div>'; return; }
+  const orders = getOrders().filter(o=>o.customerId===sess.id); if(!orders.length){ holder.innerHTML='<div class=\"small\">No orders yet</div>'; return; }
+  orders.slice().reverse().forEach(o=>{ const d=document.createElement('div'); d.className='card'; d.style.marginTop='8px'; d.innerHTML=`<div style=\"display:flex;justify-content:space-between\"><div><strong>${escapeHtml(o.store)}</strong><div class=\"small\">${escapeHtml(o.type)}</div></div><div class=\"small\">${new Date(o.time).toLocaleString()}</div></div><div style=\"margin-top:8px\" class=\"small\">${escapeHtml(o.items)}</div><div style=\"margin-top:8px\" class=\"small\">Location: ${escapeHtml(o.location)}</div><div style=\"margin-top:8px\" class=\"small\">Status: ${escapeHtml(o.status)}</div>`; holder.appendChild(d); });
+}
+
+/* Admin: pending drivers */
+function renderPendingDrivers(){ const holder=el('pendingDrivers'); holder.innerHTML=''; const arr=getDrivers().filter(d=>d.status==='pending'); if(!arr.length){ holder.innerHTML='<div class=\"small\">No pending drivers</div>'; return; } arr.forEach(d=>{ const div=document.createElement('div'); div.className='card'; div.style.marginTop='8px'; div.innerHTML=`<div><strong>${escapeHtml(d.name)}</strong></div><div class=\"small\">${escapeHtml(d.phone)}</div><div style=\"margin-top:8px\"><button class=\"btn btn-primary\" onclick=\"approveDriver('${d.id}')\">Approve</button> <button class=\"btn btn-ghost\" onclick=\"rejectDriver('${d.id}')\">Reject</button></div>`; holder.appendChild(div); }); }
+
+function approveDriver(id){ const arr=getDrivers(); const i=arr.findIndex(x=>x.id===id); if(i===-1) return; arr[i].status='approved'; saveDrivers(arr); showToast('Driver approved',arr[i].name); renderPendingDrivers(); renderAdminOrders(); }
+function rejectDriver(id){ if(!confirm('Remove driver?')) return; let arr=getDrivers().filter(x=>x.id!==id); saveDrivers(arr); renderPendingDrivers(); }
+
+function renderAdminOrders(){ const holder=el('adminMessages'); holder.innerHTML=''; const orders=getOrders(); if(!orders.length){ holder.innerHTML='<div class=\"small\">No orders</div>'; return; } orders.slice().reverse().forEach(o=>{ const div=document.createElement('div'); div.className='card'; div.style.marginTop='8px'; div.innerHTML=`<div style=\"display:flex;justify-content:space-between\"><div><strong>${escapeHtml(o.store)}</strong> — ${escapeHtml(o.customerName||'')}</div><div class=\"small\">${new Date(o.time).toLocaleString()}</div></div><div class=\"small\" style=\"margin-top:6px\">${escapeHtml(o.items)}</div><div class=\"small\" style=\"margin-top:6px\">Type: ${escapeHtml(o.type)}</div><div style=\"margin-top:8px\"></div>`; holder.appendChild(div); }); }
+
+function renderAdminLocations(){ const holder=el('adminLocations'); holder.innerHTML=''; const locs=getLocations(); if(!locs.length){ holder.innerHTML='<div class=\"small\">No shared locations</div>'; clearMapMarker(); return; } locs.slice().reverse().forEach(m=>{ const div=document.createElement('div'); div.className='admin-list item'; div.style.padding='8px'; div.innerHTML=`<div><strong>${escapeHtml(m.customerName||'Customer')}</strong> — ${escapeHtml(m.phone||'')}</div><div class=\"small\">${new Date(m.time).toLocaleString()}</div><div style=\"margin-top:6px\"><a href=\"#\" onclick=\"openInMaps(${m.lat},${m.lon});return false\">Open maps</a> • <a href=\"#\" onclick=\"copyCoords(${m.lat},${m.lon});return false\">Copy coords</a> • <a href=\"#\" onclick=\"showOnOfflineMap(${m.lat},${m.lon});return false\">Show on map</a></div>`; holder.appendChild(div); }); const last = locs[locs.length-1]; if(last){ showOnOfflineMap(last.lat,last.lon); } }
+
+function clearMapMarker(){ const map = el('adminMap'); const old = map.querySelector('.map-marker'); if(old) old.remove(); }
+function showOnOfflineMap(lat,lon){
+  const map = el('adminMap'); clearMapMarker();
+  const latMin = -31.1, latMax = -30.6, lonMin = 28.5, lonMax = 29.2;
+  const clampedLat = Math.max(Math.min(lat, latMax), latMin);
+  const clampedLon = Math.max(Math.min(lon, lonMax), lonMin);
+  const relY = 1 - ((clampedLat - latMin) / (latMax - latMin));
+  const relX = (clampedLon - lonMin) / (lonMax - lonMin);
+  const rw = map.clientWidth, rh = map.clientHeight;
+  const px = Math.round(relX * rw), py = Math.round(relY * rh);
+  const marker = document.createElement('div'); marker.className='map-marker';
+  marker.style.left = px + 'px'; marker.style.top = py + 'px';
+  map.appendChild(marker);
+}
+
+function openInMaps(lat,lon){ const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`; window.open(url,'_blank'); }
+function copyCoords(lat,lon){ const txt = lat + ',' + lon; navigator.clipboard?.writeText(txt).then(()=> showToast('Coordinates copied') ).catch(()=> alert('Copy failed')); }
+
+function renderAdminMessages(){ renderAdminOrders(); renderAdminLocations(); renderPendingDrivers(); }
+
+function exportCSV(kind){
+  if(kind==='orders'){ const arr=getOrders(); if(!arr.length){ alert('No orders'); return; } const rows=[['id,customerName,phone,store,items,type,status,time'].join(',')]; arr.forEach(r=> rows.push([r.id, r.customerName||'', '', r.store.replace(/,/g,' '), (r.items||'').replace(/,/g,' '), r.type, r.status, new Date(r.time).toISOString()].join(','))); downloadText(rows.join('\\n'),'orders.csv'); }
+  else if(kind==='drivers'){ const arr=getDrivers(); if(!arr.length){ alert('No drivers'); return; } const rows=[['id,name,phone,vehicle,status'].join(',')]; arr.forEach(d=> rows.push([d.id, d.name.replace(/,/g,' '), d.phone, d.vehicle.replace(/,/g,' '), d.status].join(','))); downloadText(rows.join('\\n'),'drivers.csv'); }
+  else if(kind==='messages'){ const arr=getContacts(); if(!arr.length){ alert('No messages'); return; } const rows=[['id,name,phone,msg,time'].join(',')]; arr.forEach(m=> rows.push([m.id, m.name.replace(/,/g,' '), m.phone, m.msg.replace(/,/g,' '), new Date(m.time).toISOString()].join(','))); downloadText(rows.join('\\n'),'messages.csv'); }
+}
+function downloadText(content, filename){ const blob = new Blob([content],{type:'text/csv'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); }
+
+function saveContact(){ const name=el('ct_name').value.trim(); const phone=el('ct_phone').value.trim(); const msg=el('ct_msg').value.trim(); if(!name||!phone||!msg){ alert('Fill all'); return; } const arr=getContacts(); arr.push({id:uid('MSG'),name,phone,msg,time:Date.now()}); saveContacts(arr); el('ct_name').value=''; el('ct_phone').value=''; el('ct_msg').value=''; showToast('Message saved'); renderAdminMessages(); }
+
+let tap=0, ttimer=null;
+el('logoTap').addEventListener('click', ()=>{ tap++; if(ttimer) clearTimeout(ttimer); ttimer=setTimeout(()=>tap=0,900); if(tap>=5){ tap=0; showPage('admin-login'); showToast('Admin login','Enter credentials'); }});
+
+function adminLogin(){ const e=el('admin_email').value.trim(); const p=el('admin_pass').value; if(e===ADMIN_EMAIL && p===ADMIN_PASS){ showPage('admin'); showToast('Admin logged in',''); renderAdminMessages(); } else alert('Incorrect admin credentials'); }
+
+function renderDriverAssigned(){ const sess=getSession(); if(!sess||sess.type!=='driver') return; const drs=getDrivers(); const drv=drs.find(d=>d.id===sess.id); const holder=el('driverAssigned'); holder.innerHTML=''; const orders=getOrders().filter(o=>o.driverId===drv.id); if(!orders.length){ holder.innerHTML='<div class=\"small\">No assigned orders</div>'; return; } orders.forEach(o=>{ const d=document.createElement('div'); d.className='card'; d.style.marginTop='8px'; d.innerHTML=`<div><strong>${escapeHtml(o.store)}</strong> — ${escapeHtml(o.customerName)}</div><div class=\"small\">Location: ${escapeHtml(o.location)}</div><div style=\"margin-top:8px\"><button class=\"btn btn-primary\" onclick=\"markStatus('${o.id}','picked')\">Picked</button> <button class=\"btn btn-primary\" onclick=\"markStatus('${o.id}','on the way')\">On the way</button> <button class=\"btn btn-ghost\" onclick=\"markStatus('${o.id}','delivered')\">Delivered</button></div>`; holder.appendChild(d); }); }
+
+function markStatus(orderId,status){ const orders=getOrders(); const i=orders.findIndex(o=>o.id===orderId); if(i===-1) return; orders[i].status=status; saveOrders(orders); showToast('Order updated','Status: '+status); renderDriverAssigned(); renderCustomerOrders(); renderAdminOrders(); }
+
+function assignDriver(orderId, driverId){ const orders=getOrders(); const i=orders.findIndex(o=>o.id===orderId); if(i===-1) return; orders[i].driverId=driverId||null; orders[i].status=driverId?'assigned':orders[i].status; saveOrders(orders); showToast('Driver assigned',''); renderAdminOrders(); renderCustomerOrders(); }
+
+function renderInitial(){ renderCustomerOrders(); renderAdminMessages(); renderAdminLocations(); renderPendingDrivers(); renderAdminOrders(); checkOrderPermission(); }
+
+function checkOrderPermission(){ const sess=getSession(); const btn=el('placeOrderBtn'); if(!sess||sess.type!=='customer'){ if(btn){ btn.disabled=true; btn.style.opacity=0.5; } } else { if(btn){ btn.disabled=false; btn.style.opacity=1; } } }
+
+function showPageName(name){ showPage(name); }
+
+window._FE={getCustomers,getDrivers,getOrders,getContacts,getLocations,getSession,setSession,clearSession};
+
+function copyCoords(lat,lon){ const txt = lat+','+lon; navigator.clipboard?.writeText(txt).then(()=>showToast('Copied coords')).catch(()=>alert('Copy failed')); }
+
+</script>
+
+<div style="margin-top:6px;color:#0b2a25;font-size:14px;line-height:1.4;max-width:720px;margin-left:auto;margin-right:auto;">
+  <strong>Note:</strong> • We operate during standard business hours.<br>
+  • Delivery starts from <strong>R50</strong> and may vary based on distance.<br>
+  • Pricing is calculated fairly according to your location.
+</div>
+
+<div style="margin-top:40px;text-align:center;font-size:13px;color:#666;">© 2025 Fletcher Eats</div>
+</body>
+</html>
